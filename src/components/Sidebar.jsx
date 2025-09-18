@@ -186,7 +186,7 @@ export default function Sidebar() {
           {/* User info */}
           <div className="px-4 py-4 border-b border-gray-200">
             <div className="flex items-center">
-              <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-medium">
+              <div className="w-9 h-9 text-sm bg-blue-500 rounded-full flex items-center justify-center text-white font-medium">
                 {user?.user_metadata?.name?.[0] ||
                   user?.email?.[0]?.toUpperCase() ||
                   "U"}

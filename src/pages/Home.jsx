@@ -123,7 +123,7 @@ export default function Home() {
     <div className="p-8 bg-gray-50 min-h-screen">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-medium text-gray-800">
+        <h1 className="text-xl font-medium text-gray-800">
           {user?.user_metadata?.name || "사용자"}님, 안녕하세요
         </h1>
         <p className="text-sm text-gray-500 mt-2">
