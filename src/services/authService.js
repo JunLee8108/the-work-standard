@@ -28,41 +28,27 @@ export const signUp = async (email, password, metadata = {}) => {
 
 // 로그아웃
 export const signOut = async () => {
-  const { error } = await supabase.auth.signOut();
-  if (error) throw error;
+  // 에러 무시하고 항상 성공 처리
+  try {
+    await supabase.auth.signOut();
+  } catch (error) {
+    console.warn("Sign out error:", error);
+  }
   return { success: true };
 };
 
-// 현재 사용자 가져오기 - 세션 체크로 변경
-export const getCurrentSession = async () => {
+// 세션 가져오기
+export const getSession = async () => {
   const {
     data: { session },
-    error,
   } = await supabase.auth.getSession();
-
-  // 세션이 없는 것은 에러가 아님
-  if (!session) {
-    return null;
-  }
-
-  if (error) throw error;
   return session;
 };
 
-// 비밀번호 재설정 이메일 보내기
+// 비밀번호 재설정
 export const resetPassword = async (email) => {
   const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${window.location.origin}/reset-password`,
-  });
-
-  if (error) throw error;
-  return data;
-};
-
-// 프로필 업데이트
-export const updateProfile = async (updates) => {
-  const { data, error } = await supabase.auth.updateUser({
-    data: updates,
   });
 
   if (error) throw error;

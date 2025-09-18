@@ -1,7 +1,7 @@
 // src/stores/authStore.js
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
-import { toast } from "react-hot-toast"; // toast import 추가
+import { toast } from "react-hot-toast";
 import supabase from "../services/supabaseClient";
 import * as authService from "../services/authService";
 
@@ -11,108 +11,77 @@ const useAuthStore = create(
       // State
       user: null,
       loading: true,
-      error: null,
       isAuthenticated: false,
-
-      // Actions
-      setUser: (user) =>
-        set({
-          user,
-          isAuthenticated: !!user,
-          error: null,
-        }),
-
-      setLoading: (loading) => set({ loading }),
-
-      setError: (error) => set({ error }),
 
       // 로그인
       signIn: async (email, password) => {
         try {
-          set({ loading: true, error: null });
+          set({ loading: true });
           const data = await authService.signIn(email, password);
 
-          if (data.user) {
-            set({
-              user: data.user,
-              isAuthenticated: true,
-              loading: false,
-            });
-          }
+          set({
+            user: data.user,
+            isAuthenticated: true,
+            loading: false,
+          });
 
-          return { success: true, data };
+          return { success: true };
         } catch (error) {
           const errorMessage =
             error.message === "Invalid login credentials"
               ? "이메일 또는 비밀번호가 올바르지 않습니다."
+              : error.message === "Email not confirmed"
+              ? "이메일 확인이 필요합니다."
               : error.message;
 
-          // 여기서 직접 toast 표시
           toast.error(errorMessage);
-
           set({ loading: false });
-          throw error;
+          return { success: false };
         }
       },
 
       // 회원가입
       signUp: async (email, password, name, company) => {
         try {
-          set({ loading: true, error: null });
-          const data = await authService.signUp(email, password, {
-            name,
-            company,
-          });
+          set({ loading: true });
+          await authService.signUp(email, password, { name, company });
 
-          if (data.user) {
-            set({
-              user: data.user,
-              isAuthenticated: true,
-              loading: false,
-            });
-          }
-
-          return { success: true, data };
+          set({ loading: false });
+          return { success: true };
         } catch (error) {
           const errorMessage =
             error.message === "User already registered"
               ? "이미 등록된 이메일입니다."
               : error.message;
 
-          // 여기서 직접 toast 표시
           toast.error(errorMessage);
-
           set({ loading: false });
-          throw error;
+          return { success: false };
         }
       },
 
       // 로그아웃
       signOut: async () => {
-        try {
-          set({ loading: true, error: null });
-          await authService.signOut();
-          set({
-            user: null,
-            isAuthenticated: false,
-            loading: false,
-          });
-        } catch (error) {
-          toast.error("로그아웃 중 오류가 발생했습니다.");
-          set({ loading: false });
-          throw error;
-        }
+        set({ loading: true });
+        await authService.signOut();
+
+        set({
+          user: null,
+          isAuthenticated: false,
+          loading: false,
+        });
+
+        // 로컬 스토리지 정리
+        localStorage.clear();
+        sessionStorage.clear();
       },
 
-      // 사용자 초기화 (앱 시작시)
+      // 앱 초기화 시 세션 확인
       initializeAuth: async () => {
         try {
-          set({ loading: true, error: null });
+          set({ loading: true });
 
-          // 세션 체크
-          const {
-            data: { session },
-          } = await supabase.auth.getSession();
+          const session = await authService.getSession();
 
           if (session?.user) {
             set({
@@ -120,14 +89,12 @@ const useAuthStore = create(
               isAuthenticated: true,
               loading: false,
             });
-            return session.user;
           } else {
             set({
               user: null,
               isAuthenticated: false,
               loading: false,
             });
-            return null;
           }
         } catch (error) {
           console.error("Auth initialization error:", error);
@@ -136,12 +103,8 @@ const useAuthStore = create(
             isAuthenticated: false,
             loading: false,
           });
-          return null;
         }
       },
-
-      // 에러 클리어
-      clearError: () => set({ error: null }),
     }),
     {
       name: "auth-store",
@@ -149,24 +112,35 @@ const useAuthStore = create(
   )
 );
 
-// Supabase Auth 리스너 설정
+// Auth 상태 리스너 (최소한의 이벤트만 처리)
 export const setupAuthListener = () => {
   const { data: listener } = supabase.auth.onAuthStateChange(
     (event, session) => {
-      const user = session?.user ?? null;
+      // 토큰 갱신은 무시
+      if (event === "TOKEN_REFRESHED") return;
 
-      if (event === "TOKEN_REFRESHED") {
+      // 로그아웃이나 사용자 삭제 시
+      if (event === "SIGNED_OUT" || event === "USER_DELETED") {
+        useAuthStore.setState({
+          user: null,
+          isAuthenticated: false,
+          loading: false,
+        });
         return;
       }
 
-      useAuthStore.getState().setUser(user);
-      useAuthStore.getState().setLoading(false);
+      // 로그인 시
+      if (event === "SIGNED_IN" && session?.user) {
+        useAuthStore.setState({
+          user: session.user,
+          isAuthenticated: true,
+          loading: false,
+        });
+      }
     }
   );
 
-  return () => {
-    listener.subscription.unsubscribe();
-  };
+  return () => listener.subscription.unsubscribe();
 };
 
 export default useAuthStore;
