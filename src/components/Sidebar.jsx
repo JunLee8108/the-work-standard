@@ -1,5 +1,5 @@
 // src/components/Sidebar.jsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { NavLink, useLocation } from "react-router";
 import {
   LayoutDashboard,
@@ -21,23 +21,53 @@ import {
 } from "lucide-react";
 import useAuthStore from "../stores/authStore";
 
+const SIDEBAR_STATE_KEY = "sidebar_state";
+
 export default function Sidebar() {
   const location = useLocation();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const [expandedMenus, setExpandedMenus] = useState({});
 
   const user = useAuthStore((state) => state.user);
-  const profile = useAuthStore((state) => state.profile); // profile 가져오기
+  const profile = useAuthStore((state) => state.profile);
   const signOut = useAuthStore((state) => state.signOut);
 
-  // role별 메뉴 아이템 정의
+  // expandedMenus 초기 상태 - sessionStorage에서 복원
+  const [expandedMenus, setExpandedMenus] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem(SIDEBAR_STATE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return parsed.expandedMenus || {};
+      }
+    } catch (error) {
+      console.error("Failed to load sidebar state:", error);
+    }
+    return {};
+  });
+
+  // expandedMenus 변경 시 sessionStorage에 저장
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(
+        SIDEBAR_STATE_KEY,
+        JSON.stringify({
+          expandedMenus,
+          timestamp: Date.now(),
+        })
+      );
+    } catch (error) {
+      console.error("Failed to save sidebar state:", error);
+    }
+  }, [expandedMenus]);
+
+  // 메뉴 아이템 정의
   const getAllMenuItems = () => {
     const baseMenuItems = [
       {
         title: "대시보드",
         icon: LayoutDashboard,
         path: "/",
-        roles: ["user", "admin"], // 모든 사용자
+        roles: ["user", "admin"],
       },
       {
         title: "근태관리",
@@ -68,7 +98,7 @@ export default function Sidebar() {
             path: "/attendance/report",
             icon: BarChart3,
             roles: ["admin"],
-          }, // 관리자만
+          },
         ],
       },
     ];
@@ -145,31 +175,45 @@ export default function Sidebar() {
 
   // 현재 사용자 role에 맞는 메뉴만 필터링
   const filterMenuByRole = (items) => {
-    const userRole = profile?.role || "user"; // 기본값 user
+    const userRole = profile?.role || "user";
 
     return items
       .filter((item) => item.roles?.includes(userRole))
       .map((item) => {
         if (item.subItems) {
-          return {
-            ...item,
-            subItems: item.subItems.filter((subItem) =>
-              subItem.roles?.includes(userRole)
-            ),
-          };
+          const filteredSubItems = item.subItems.filter((subItem) =>
+            subItem.roles?.includes(userRole)
+          );
+          return filteredSubItems.length > 0
+            ? { ...item, subItems: filteredSubItems }
+            : null;
         }
         return item;
       })
-      .filter((item) => {
-        // subItems가 있는데 비어있으면 메뉴 자체를 제거
-        if (item.subItems && item.subItems.length === 0) {
-          return false;
-        }
-        return true;
-      });
+      .filter(Boolean);
   };
 
   const menuItems = filterMenuByRole(getAllMenuItems());
+
+  // 현재 경로 기반 자동 메뉴 확장
+  useEffect(() => {
+    const currentPath = location.pathname;
+
+    // 현재 경로가 서브메뉴인 경우 부모 메뉴 자동 확장
+    menuItems.forEach((item) => {
+      if (item.subItems?.some((sub) => sub.path === currentPath)) {
+        setExpandedMenus((prev) => {
+          // 이미 열려있으면 유지
+          if (prev[item.title]) return prev;
+
+          return {
+            ...prev,
+            [item.title]: true,
+          };
+        });
+      }
+    });
+  }, [location.pathname]);
 
   const toggleExpanded = (title) => {
     setExpandedMenus((prev) => ({
@@ -201,7 +245,13 @@ export default function Sidebar() {
           <>
             <button
               onClick={() => toggleExpanded(item.title)}
-              className="w-full cursor-pointer hover:bg-gray-100 flex items-center justify-between px-4 py-2.5 text-sm font-medium rounded-lg transition-colors"
+              className={`w-full cursor-pointer flex items-center justify-between px-4 py-2.5 text-sm font-medium rounded-lg transition-colors ${
+                active
+                  ? "bg-blue-50 text-blue-600"
+                  : "hover:bg-gray-100 text-gray-700"
+              }`}
+              aria-expanded={isExpanded}
+              aria-controls={`submenu-${item.title}`}
             >
               <div className="flex items-center">
                 <item.icon className="w-5 h-5 mr-3" />
@@ -209,12 +259,12 @@ export default function Sidebar() {
               </div>
               <ChevronDown
                 className={`w-4 h-4 transition-transform ${
-                  isExpanded ? "transform rotate-180" : ""
+                  isExpanded ? "rotate-180" : ""
                 }`}
               />
             </button>
             {isExpanded && (
-              <div className="mt-1 ml-4 space-y-1">
+              <div id={`submenu-${item.title}`} className="mt-1 ml-4 space-y-1">
                 {item.subItems.map((subItem) => (
                   <NavLink
                     key={subItem.path}
@@ -256,6 +306,7 @@ export default function Sidebar() {
         <button
           onClick={() => setIsMobileOpen(!isMobileOpen)}
           className="p-2 rounded-lg bg-white shadow-md hover:shadow-lg transition-shadow"
+          aria-label={isMobileOpen ? "메뉴 닫기" : "메뉴 열기"}
         >
           {isMobileOpen ? (
             <X className="w-6 h-6 text-gray-700" />
@@ -270,6 +321,7 @@ export default function Sidebar() {
         <div
           className="lg:hidden fixed inset-0 z-40 bg-black bg-opacity-50"
           onClick={() => setIsMobileOpen(false)}
+          aria-hidden="true"
         />
       )}
 
@@ -278,6 +330,8 @@ export default function Sidebar() {
         className={`fixed top-0 left-0 z-40 h-screen w-64 bg-white border-r border-gray-200 transition-transform ${
           isMobileOpen ? "translate-x-0" : "-translate-x-full"
         } lg:translate-x-0`}
+        role="navigation"
+        aria-label="주 메뉴"
       >
         <div className="flex flex-col h-full">
           {/* User info */}
