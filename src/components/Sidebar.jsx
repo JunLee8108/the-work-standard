@@ -104,11 +104,7 @@ export default function Sidebar() {
           <>
             <button
               onClick={() => toggleExpanded(item.title)}
-              className={`w-full flex items-center justify-between px-4 py-2.5 text-sm font-medium rounded-lg transition-colors ${
-                active
-                  ? "bg-blue-50 text-blue-600"
-                  : "text-gray-700 hover:bg-gray-100"
-              }`}
+              className="w-full cursor-pointer hover:bg-gray-100 flex items-center justify-between px-4 py-2.5 text-sm font-medium rounded-lg transition-colors"
             >
               <div className="flex items-center">
                 <item.icon className="w-5 h-5 mr-3" />
@@ -159,7 +155,7 @@ export default function Sidebar() {
   return (
     <>
       {/* Mobile menu button */}
-      <div className="lg:hidden fixed top-4 left-4 z-50">
+      <div className="lg:hidden fixed top-2 right-3 z-50">
         <button
           onClick={() => setIsMobileOpen(!isMobileOpen)}
           className="p-2 rounded-lg bg-white shadow-md hover:shadow-lg transition-shadow"
@@ -187,11 +183,6 @@ export default function Sidebar() {
         } lg:translate-x-0`}
       >
         <div className="flex flex-col h-full">
-          {/* Logo */}
-          <div className="flex items-center justify-center h-16 border-b border-gray-200">
-            <h1 className="text-xl font-bold text-gray-900">업무의정석</h1>
-          </div>
-
           {/* User info */}
           <div className="px-4 py-4 border-b border-gray-200">
             <div className="flex items-center">

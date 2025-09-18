@@ -123,7 +123,7 @@ export default function Home() {
     <div className="p-8 bg-gray-50 min-h-screen">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-normal text-gray-800">
+        <h1 className="text-2xl font-medium text-gray-800">
           {user?.user_metadata?.name || "사용자"}님, 안녕하세요
         </h1>
         <p className="text-sm text-gray-500 mt-2">
@@ -138,12 +138,12 @@ export default function Home() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
         {/* 출근 현황 */}
         <div className="bg-white rounded-xl border border-gray-100 p-6 transition-shadow">
           <div className="flex items-start justify-between mb-4">
             <div>
-              <p className="text-base uppercase tracking-wider text-gray-500 mb-1">
+              <p className="text-base uppercase tracking-wider text-gray-500 mb-2">
                 출근 현황
               </p>
               <p className="text-2xl font-light text-gray-800">
@@ -176,7 +176,7 @@ export default function Home() {
         <div className="bg-white rounded-xl border border-gray-100 p-6 transition-shadow">
           <div className="flex items-start justify-between mb-4">
             <div>
-              <p className="text-base uppercase tracking-wider text-gray-500 mb-1">
+              <p className="text-base uppercase tracking-wider text-gray-500 mb-2">
                 재고 현황
               </p>
               <p className="text-2xl font-light text-gray-800">
@@ -207,7 +207,7 @@ export default function Home() {
         <div className="bg-white rounded-xl border border-gray-100 p-6 transition-shadow">
           <div className="flex items-start justify-between mb-4">
             <div>
-              <p className="text-base uppercase tracking-wider text-gray-500 mb-1">
+              <p className="text-base uppercase tracking-wider text-gray-500 mb-2">
                 발주 현황
               </p>
               <p className="text-2xl font-light text-gray-800">
@@ -238,7 +238,7 @@ export default function Home() {
         <div className="bg-white rounded-xl border border-gray-100 p-6 transition-shadow">
           <div className="flex items-start justify-between mb-4">
             <div>
-              <p className="text-base uppercase tracking-wider text-gray-500 mb-1">
+              <p className="text-base uppercase tracking-wider text-gray-500 mb-2">
                 이번달 매출
               </p>
               <p className="text-2xl font-light text-gray-800">
