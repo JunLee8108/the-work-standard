@@ -89,8 +89,8 @@ export default function Auth() {
 
       if (result.success) {
         toast.success(
-          `회원가입이 완료되었습니다! ${formData.email}로 발송된 인증 이메일을 확인해주세요.`,
-          { duration: 7000, icon: "📧" }
+          `${formData.email}로 발송된 인증 이메일을 확인해주세요.`,
+          { duration: 7000 }
         );
 
         // 로그인 폼으로 전환

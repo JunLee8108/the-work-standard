@@ -1,4 +1,4 @@
-// src/components/layout/Sidebar.jsx
+// src/components/Sidebar.jsx
 import { useState } from "react";
 import { NavLink, useLocation } from "react-router";
 import {
@@ -27,52 +27,149 @@ export default function Sidebar() {
   const [expandedMenus, setExpandedMenus] = useState({});
 
   const user = useAuthStore((state) => state.user);
+  const profile = useAuthStore((state) => state.profile); // profile 가져오기
   const signOut = useAuthStore((state) => state.signOut);
 
-  const menuItems = [
-    {
-      title: "대시보드",
-      icon: LayoutDashboard,
-      path: "/",
-    },
-    {
-      title: "근태관리",
-      icon: Clock,
-      path: "/attendance",
-      subItems: [
-        { title: "출퇴근 체크", path: "/attendance/check", icon: Calendar },
-        { title: "근태 현황", path: "/attendance/status", icon: Users },
-        { title: "휴가 관리", path: "/attendance/leave", icon: FileText },
-        { title: "근태 리포트", path: "/attendance/report", icon: BarChart3 },
-      ],
-    },
-    {
-      title: "재고관리",
-      icon: Package,
-      path: "/inventory",
-      subItems: [
-        { title: "재고 현황", path: "/inventory/status", icon: Box },
-        { title: "입출고 관리", path: "/inventory/inout", icon: ShoppingCart },
-        { title: "발주 관리", path: "/inventory/order", icon: FileText },
-        { title: "재고 리포트", path: "/inventory/report", icon: TrendingUp },
-      ],
-    },
-    {
-      title: "리포트",
-      icon: BarChart3,
-      path: "/reports",
-    },
-    {
-      title: "설정",
-      icon: Settings,
-      path: "/settings",
-      subItems: [
-        { title: "회사 정보", path: "/settings/company", icon: Building2 },
-        { title: "사용자 관리", path: "/settings/users", icon: Users },
-        { title: "시스템 설정", path: "/settings/system", icon: Settings },
-      ],
-    },
-  ];
+  // role별 메뉴 아이템 정의
+  const getAllMenuItems = () => {
+    const baseMenuItems = [
+      {
+        title: "대시보드",
+        icon: LayoutDashboard,
+        path: "/",
+        roles: ["user", "admin"], // 모든 사용자
+      },
+      {
+        title: "근태관리",
+        icon: Clock,
+        path: "/attendance",
+        roles: ["user", "admin"],
+        subItems: [
+          {
+            title: "출퇴근 체크",
+            path: "/attendance/check",
+            icon: Calendar,
+            roles: ["user", "admin"],
+          },
+          {
+            title: "근태 현황",
+            path: "/attendance/status",
+            icon: Users,
+            roles: ["user", "admin"],
+          },
+          {
+            title: "휴가 신청",
+            path: "/attendance/leave",
+            icon: FileText,
+            roles: ["user", "admin"],
+          },
+          {
+            title: "근태 리포트",
+            path: "/attendance/report",
+            icon: BarChart3,
+            roles: ["admin"],
+          }, // 관리자만
+        ],
+      },
+    ];
+
+    const adminOnlyMenuItems = [
+      {
+        title: "재고관리",
+        icon: Package,
+        path: "/inventory",
+        roles: ["admin"],
+        subItems: [
+          {
+            title: "재고 현황",
+            path: "/inventory/status",
+            icon: Box,
+            roles: ["admin"],
+          },
+          {
+            title: "입출고 관리",
+            path: "/inventory/inout",
+            icon: ShoppingCart,
+            roles: ["admin"],
+          },
+          {
+            title: "발주 관리",
+            path: "/inventory/order",
+            icon: FileText,
+            roles: ["admin"],
+          },
+          {
+            title: "재고 리포트",
+            path: "/inventory/report",
+            icon: TrendingUp,
+            roles: ["admin"],
+          },
+        ],
+      },
+      {
+        title: "리포트",
+        icon: BarChart3,
+        path: "/reports",
+        roles: ["admin"],
+      },
+      {
+        title: "설정",
+        icon: Settings,
+        path: "/settings",
+        roles: ["admin"],
+        subItems: [
+          {
+            title: "회사 정보",
+            path: "/settings/company",
+            icon: Building2,
+            roles: ["admin"],
+          },
+          {
+            title: "사용자 관리",
+            path: "/settings/users",
+            icon: Users,
+            roles: ["admin"],
+          },
+          {
+            title: "시스템 설정",
+            path: "/settings/system",
+            icon: Settings,
+            roles: ["admin"],
+          },
+        ],
+      },
+    ];
+
+    return [...baseMenuItems, ...adminOnlyMenuItems];
+  };
+
+  // 현재 사용자 role에 맞는 메뉴만 필터링
+  const filterMenuByRole = (items) => {
+    const userRole = profile?.role || "user"; // 기본값 user
+
+    return items
+      .filter((item) => item.roles?.includes(userRole))
+      .map((item) => {
+        if (item.subItems) {
+          return {
+            ...item,
+            subItems: item.subItems.filter((subItem) =>
+              subItem.roles?.includes(userRole)
+            ),
+          };
+        }
+        return item;
+      })
+      .filter((item) => {
+        // subItems가 있는데 비어있으면 메뉴 자체를 제거
+        if (item.subItems && item.subItems.length === 0) {
+          return false;
+        }
+        return true;
+      });
+  };
+
+  const menuItems = filterMenuByRole(getAllMenuItems());
 
   const toggleExpanded = (title) => {
     setExpandedMenus((prev) => ({
@@ -187,17 +284,20 @@ export default function Sidebar() {
           <div className="px-4 py-4 border-b border-gray-200">
             <div className="flex items-center">
               <div className="w-9 h-9 text-sm bg-blue-500 rounded-full flex items-center justify-center text-white font-medium">
-                {user?.user_metadata?.name?.[0] ||
-                  user?.email?.[0]?.toUpperCase() ||
-                  "U"}
+                {profile?.name?.[0] || user?.email?.[0]?.toUpperCase() || "U"}
               </div>
               <div className="ml-3">
                 <p className="text-sm font-medium text-gray-900">
-                  {user?.user_metadata?.name || "사용자"}
+                  {profile?.name || "사용자"}
                 </p>
                 <p className="text-xs text-gray-500">
-                  {user?.user_metadata?.company || "회사명"}
+                  {profile?.company || "회사명"}
                 </p>
+                {profile?.role === "admin" && (
+                  <span className="text-xs text-blue-600 font-medium">
+                    관리자
+                  </span>
+                )}
               </div>
             </div>
           </div>
