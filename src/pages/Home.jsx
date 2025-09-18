@@ -266,7 +266,7 @@ export default function Home() {
       </div>
 
       {/* Recent Activities & Schedule */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Recent Activities */}
         <div className="bg-white rounded-xl border border-gray-100">
           <div className="px-6 py-4 border-b border-gray-50">
