@@ -8,11 +8,27 @@ export const getCurrentUserProfile = async (userId) => {
   try {
     const { data, error } = await supabase
       .from("profiles")
-      .select("*")
+      .select(
+        `
+        *,
+        companies (
+          id,
+          name
+        )
+      `
+      )
       .eq("id", userId)
       .single();
 
     if (error) throw error;
+
+    // companies 정보를 profile에 평탄화
+    if (data && data.companies) {
+      return {
+        ...data,
+        company_name: data.companies.name,
+      };
+    }
     return data;
   } catch (error) {
     console.error("Error fetching profile:", error);
@@ -43,15 +59,31 @@ export const updateProfile = async (userId, updates) => {
 /**
  * 모든 프로필 조회 (관리자용)
  */
-export const getAllProfiles = async () => {
+export const getAllProfiles = async (companyId) => {
   try {
     const { data, error } = await supabase
       .from("profiles")
-      .select("*")
+      .select(
+        `
+        *,
+        companies (
+          id,
+          name
+        )
+      `
+      )
+      .eq("company_id", companyId) // 같은 회사만
       .order("created_at", { ascending: false });
 
     if (error) throw error;
-    return data || [];
+
+    // companies 정보 평탄화
+    return (
+      data?.map((profile) => ({
+        ...profile,
+        company_name: profile.companies?.name,
+      })) || []
+    );
   } catch (error) {
     console.error("Error fetching all profiles:", error);
     throw error;

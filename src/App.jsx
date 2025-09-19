@@ -6,6 +6,7 @@ import useAuthStore from "./stores/authStore";
 import Sidebar from "./components/Sidebar";
 import Auth from "./pages/Auth";
 import Home from "./pages/Home";
+import AttendanceCheck from "./pages/attendance/AttendanceCheck";
 import UserManagement from "./pages/admin/UserManagement";
 
 // Layout 컴포넌트
@@ -112,11 +113,31 @@ export default function App() {
         />
         {/* 추가 라우트들 */}
         <Route
-          path="/attendance/*"
+          path="/attendance/check"
           element={
             <ProtectedRoute>
               <DashboardLayout>
-                <div className="p-6">근태관리 페이지</div>
+                <AttendanceCheck />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/attendance/status"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <div className="p-6">근태 현황 페이지</div>
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/attendance/leave"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <div className="p-6">휴가 신청 페이지</div>
               </DashboardLayout>
             </ProtectedRoute>
           }

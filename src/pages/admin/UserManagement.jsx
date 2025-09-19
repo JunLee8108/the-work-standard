@@ -60,8 +60,7 @@ export default function UserManagement() {
   const filteredProfiles = profiles.filter(
     (p) =>
       p.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.company?.toLowerCase().includes(searchQuery.toLowerCase())
+      p.email?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   // 관리자가 아닌 경우 빈 화면
@@ -127,11 +126,6 @@ export default function UserManagement() {
                 </th>
                 <th className="px-6 py-4 text-left">
                   <span className="text-xs font-medium text-gray-600 uppercase tracking-wider">
-                    회사
-                  </span>
-                </th>
-                <th className="px-6 py-4 text-left">
-                  <span className="text-xs font-medium text-gray-600 uppercase tracking-wider">
                     권한
                   </span>
                 </th>
@@ -182,11 +176,6 @@ export default function UserManagement() {
                     <td className="px-6 py-4">
                       <span className="text-sm text-gray-600">
                         {user.email}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-sm text-gray-600">
-                        {user.company || "-"}
                       </span>
                     </td>
                     <td className="px-6 py-4">

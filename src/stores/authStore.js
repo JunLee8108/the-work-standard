@@ -180,18 +180,32 @@ const useAuthStore = create(
       },
 
       // 회원가입
-      signUp: async (email, password, name, company) => {
+      signUp: async (email, password, name, companyId) => {
         try {
           set({ loading: true });
-          await authService.signUp(email, password, { name, company });
+
+          // companyId를 metadata에 포함하여 회원가입
+          await authService.signUp(email, password, {
+            name,
+            company_id: companyId, // 이미 Auth.jsx에서 검증된 ID
+            role: "user", // 기본 역할
+          });
 
           set({ loading: false });
           return { success: true };
         } catch (error) {
-          const errorMessage =
-            error.message === "User already registered"
-              ? "이미 등록된 이메일입니다."
-              : error.message;
+          let errorMessage = "회원가입 중 오류가 발생했습니다.";
+
+          // 에러 메시지 처리
+          if (error.message === "User already registered") {
+            errorMessage = "이미 등록된 이메일입니다.";
+          } else if (error.message?.includes("email")) {
+            errorMessage = "유효하지 않은 이메일 형식입니다.";
+          } else if (error.message?.includes("password")) {
+            errorMessage = "비밀번호는 최소 6자 이상이어야 합니다.";
+          } else if (error.message) {
+            errorMessage = error.message;
+          }
 
           toast.error(errorMessage);
           set({ loading: false });
@@ -248,8 +262,16 @@ const useAuthStore = create(
             return;
           }
 
+          // company_id가 없으면 리턴
+          if (!currentProfile.company_id) {
+            console.error("No company_id found");
+            return;
+          }
+
           set({ profilesLoading: true });
-          const profiles = await profileService.getAllProfiles();
+          const profiles = await profileService.getAllProfiles(
+            currentProfile.company_id
+          );
           set({ profiles, profilesLoading: false });
         } catch (error) {
           console.error("Error fetching all profiles:", error);

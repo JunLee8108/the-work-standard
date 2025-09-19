@@ -245,11 +245,7 @@ export default function Sidebar() {
           <>
             <button
               onClick={() => toggleExpanded(item.title)}
-              className={`w-full cursor-pointer flex items-center justify-between px-4 py-2.5 text-sm font-medium rounded-lg transition-colors ${
-                active
-                  ? "bg-blue-50 text-blue-600"
-                  : "hover:bg-gray-100 text-gray-700"
-              }`}
+              className="w-full cursor-pointer flex items-center justify-between px-4 py-2.5 text-sm font-medium rounded-lg transition-colors"
               aria-expanded={isExpanded}
               aria-controls={`submenu-${item.title}`}
             >
@@ -345,7 +341,7 @@ export default function Sidebar() {
                   {profile?.name || "사용자"}
                 </p>
                 <p className="text-xs text-gray-500">
-                  {profile?.company || "회사명"}
+                  {profile?.company_name || "회사명"}
                 </p>
                 {profile?.role === "admin" && (
                   <span className="text-xs text-blue-600 font-medium">
